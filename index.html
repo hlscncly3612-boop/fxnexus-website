@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS FX — AI Piyasa İstihbaratı</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ========= TOKENS ========= */
+:root{
+  --bg0:#07090c; --bg1:#0c0f14; --bg2:#11151c; --bg3:#161b24; --bg4:#1d2330;
+  --line:#232a38; --line2:#1a2029;
+  --hi:#eef1f6; --mid:#98a2b3; --low:#5b6577;
+  --up:#1fd67a; --up-d:#14502f;
+  --dn:#ff4d5e; --dn-d:#4a1820;
+  --amber:#f5a623; --amber-d:#4a3713;
+  --blue:#5b8cff; --blue-d:#1c2a4d;
+  --fm:'Inter',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --r:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow-x:hidden;}
+body{background:var(--bg0);color:var(--hi);font-family:var(--fm);font-size:14px;-webkit-font-smoothing:antialiased;}
+button{font-family:inherit;border:none;background:none;color:inherit;cursor:pointer;}
+input,select{font-family:inherit;}
+a{color:var(--blue);text-decoration:none;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important;}}
+
+/* ========= TICKER ========= */
+.ticker-wrap{background:var(--bg1);border-bottom:1px solid var(--line);overflow:hidden;height:32px;display:flex;align-items:center;}
+.ticker-track{display:flex;gap:32px;white-space:nowrap;animation:ticker 50s linear infinite;padding-left:100%;font-family:var(--mono);font-size:11.5px;}
+@keyframes ticker{from{transform:translateX(0);}to{transform:translateX(-100%);}}
+.tick-item{display:flex;align-items:center;gap:7px;color:var(--mid);}
+.tick-sym{color:var(--hi);font-weight:600;}
+.tick-up{color:var(--up);}
+.tick-dn{color:var(--dn);}
+
+/* ========= TOPBAR ========= */
+.topbar{background:var(--bg1);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:100;}
+.topbar-inner{height:54px;display:flex;align-items:center;gap:24px;padding:0 16px;}
+.brand{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.brand-mark{font-family:var(--mono);font-size:11px;background:var(--blue);color:var(--bg0);padding:3px 7px;border-radius:4px;font-weight:700;letter-spacing:.03em;}
+.brand-name{font-weight:700;font-size:15px;letter-spacing:-.01em;}
+.brand-accent{color:var(--blue);}
+.topnav{display:flex;gap:2px;flex:1;}
+.nav-btn{padding:7px 13px;font-size:13px;font-weight:500;color:var(--mid);border-radius:var(--r);transition:all .15s;}
+.nav-btn:hover{color:var(--hi);background:var(--bg2);}
+.nav-btn.active{color:var(--hi);background:var(--bg3);}
+.status-row{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.s-dot{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 3px var(--amber-d);}
+.s-dot.live{background:var(--up);box-shadow:0 0 0 3px var(--up-d);}
+.s-lbl{font-size:11.5px;color:var(--mid);}
+.clock{font-family:var(--mono);font-size:12px;color:var(--mid);padding-left:10px;border-left:1px solid var(--line);}
+
+/* ========= SHELL ========= */
+.shell{display:grid;grid-template-columns:230px 1fr 310px;gap:1px;background:var(--line);min-height:calc(100vh - 86px);}
+.col{background:var(--bg0);}
+
+/* ========= LEFT RAIL ========= */
+.rail-head{padding:12px 14px 8px;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--low);}
+.asset-tabs{display:flex;gap:3px;margin-top:8px;}
+.atab{flex:1;padding:5px 0;font-size:11px;color:var(--mid);background:var(--bg2);border-radius:4px;text-align:center;font-weight:500;}
+.atab.active{background:var(--blue-d);color:var(--blue);}
+.wl-item{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid var(--line2);cursor:pointer;transition:background .1s;}
+.wl-item:hover{background:var(--bg2);}
+.wl-item.active{background:var(--bg3);border-left:2px solid var(--blue);padding-left:12px;}
+.wl-name{font-size:12.5px;font-weight:600;}
+.wl-cls{font-size:10px;color:var(--low);text-transform:uppercase;letter-spacing:.04em;margin-top:1px;}
+.wl-price{font-family:var(--mono);font-size:12px;}
+.wl-chg{font-family:var(--mono);font-size:11px;}
+.up{color:var(--up);} .dn{color:var(--dn);}
+
+/* ========= CENTER ========= */
+.sym-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line);}
+.sym-id{display:flex;align-items:baseline;gap:12px;}
+.sym-name{font-size:17px;font-weight:700;}
+.sym-price{font-family:var(--mono);font-size:19px;font-weight:600;}
+.sym-chg{font-family:var(--mono);font-size:13px;}
+.tf-row{display:flex;gap:3px;}
+.tf-btn{padding:6px 11px;font-size:11.5px;font-weight:600;color:var(--mid);border-radius:4px;}
+.tf-btn:hover{background:var(--bg2);}
+.tf-btn.active{background:var(--bg3);color:var(--hi);}
+
+/* Chart area */
+.chart-wrap{position:relative;height:380px;background:var(--bg1);}
+#tvChart{width:100%;height:100%;}
+
+/* Source selector tabs for chart */
+.chart-src-tabs{position:absolute;top:8px;right:8px;z-index:10;display:flex;gap:3px;background:rgba(12,15,20,.85);border-radius:5px;padding:3px;}
+.csrc-btn{padding:4px 10px;font-size:11px;font-weight:600;color:var(--mid);border-radius:4px;}
+.csrc-btn.active{background:var(--bg3);color:var(--hi);}
+
+/* ========= INDICATORS ========= */
+.ind-strip{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);}
+.ind-card{padding:11px 16px;border-right:1px solid var(--line2);}
+.ind-card:last-child{border-right:none;}
+.ind-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--low);margin-bottom:3px;}
+.ind-val{font-family:var(--mono);font-size:14px;font-weight:600;}
+.ind-sub{font-size:10.5px;color:var(--mid);margin-top:2px;}
+
+/* ========= SIGNAL ENGINE ========= */
+.signal-engine{border-top:1px solid var(--line);background:linear-gradient(180deg,var(--bg1) 0%,var(--bg0) 100%);}
+.sig-head{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line2);}
+.sig-title{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.07em;color:var(--mid);}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--blue);}
+.pulse.on{animation:pulseAnim 1.4s ease-in-out infinite;}
+@keyframes pulseAnim{0%,100%{box-shadow:0 0 0 0 rgba(91,140,255,.5);}50%{box-shadow:0 0 0 6px rgba(91,140,255,0);}}
+.btn-gen{background:var(--blue);color:var(--bg0);font-weight:700;font-size:12.5px;padding:8px 16px;border-radius:var(--r);transition:opacity .15s;}
+.btn-gen:hover{opacity:.85;}
+.btn-gen:disabled{opacity:.4;cursor:default;}
+.sig-body{padding:16px 18px 20px;min-height:110px;}
+.sig-empty{color:var(--low);font-size:13px;line-height:1.6;}
+
+/* Signal result */
+.sig-result{display:flex;flex-direction:column;gap:12px;}
+.sig-verdict{display:flex;align-items:center;gap:14px;}
+.verdict{font-family:var(--mono);font-size:14px;font-weight:700;padding:8px 18px;border-radius:var(--r);letter-spacing:.04em;}
+.verdict.BUY{background:var(--up-d);color:var(--up);}
+.verdict.SELL{background:var(--dn-d);color:var(--dn);}
+.verdict.NEUTRAL{background:var(--amber-d);color:var(--amber);}
+.verdict-meta{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--mid);}
+.verdict-meta b{color:var(--hi);}
+.sig-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.sig-cell{background:var(--bg2);border:1px solid var(--line2);border-radius:var(--r);padding:9px 12px;}
+.sc-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--low);margin-bottom:3px;}
+.sc-val{font-family:var(--mono);font-size:12.5px;font-weight:600;}
+.sig-narrative{background:var(--bg2);border-left:2px solid var(--blue);padding:11px 14px;font-size:13px;line-height:1.65;border-radius:0 var(--r) var(--r) 0;}
+.src-tag{font-size:10px;color:var(--low);text-transform:uppercase;letter-spacing:.04em;display:block;margin-top:7px;}
+.sig-disc{font-size:11px;color:var(--low);line-height:1.5;border-top:1px solid var(--line2);padding-top:9px;}
+
+/* ========= RIGHT RAIL ========= */
+.rail-block{border-bottom:1px solid var(--line);display:flex;flex-direction:column;}
+.rb-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px 8px;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--low);}
+.live-tag{font-family:var(--mono);font-size:9px;color:var(--up);background:var(--up-d);padding:2px 6px;border-radius:3px;}
+.src-toggle{display:flex;gap:3px;}
+.stgl{padding:3px 8px;font-size:10px;color:var(--mid);background:var(--bg2);border-radius:3px;font-weight:500;}
+.stgl.active{background:var(--bg3);color:var(--hi);}
+
+/* News */
+.news-feed{overflow-y:auto;max-height:320px;padding:0 14px 12px;display:flex;flex-direction:column;gap:10px;}
+.news-item{padding-bottom:10px;border-bottom:1px solid var(--line2);}
+.news-item:last-child{border-bottom:none;}
+.news-hl{font-size:12.5px;line-height:1.45;color:var(--hi);margin-bottom:4px;}
+.news-meta{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}
+.n-src{font-size:10.5px;color:var(--low);}
+.n-time{font-size:10.5px;color:var(--low);font-family:var(--mono);}
+.n-sent{font-size:9.5px;padding:1px 6px;border-radius:3px;font-weight:600;text-transform:uppercase;}
+.n-sent.pos{background:var(--up-d);color:var(--up);}
+.n-sent.neg{background:var(--dn-d);color:var(--dn);}
+.n-sent.neu{background:var(--bg3);color:var(--mid);}
+
+/* Calendar mini */
+.cal-mini{overflow-y:auto;max-height:280px;padding:0 14px 12px;display:flex;flex-direction:column;gap:6px;}
+.cal-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line2);}
+.cal-row:last-child{border-bottom:none;}
+.cal-time{font-family:var(--mono);font-size:11px;color:var(--mid);min-width:38px;}
+.cal-flag{font-size:13px;}
+.cal-event{flex:1;font-size:12px;line-height:1.3;}
+.cal-imp{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+/* ========= FULL PANELS ========= */
+.panel{background:var(--bg0);min-height:calc(100vh - 86px);}
+.panel-inner{max-width:1200px;margin:0 auto;padding:28px 20px;}
+.panel-inner.narrow{max-width:720px;}
+.panel-title{font-size:20px;font-weight:700;margin-bottom:6px;}
+.panel-sub{font-size:13px;color:var(--mid);margin-bottom:22px;line-height:1.6;}
+
+/* TradingView + Investing combined calendar */
+.cal-source-tabs{display:flex;gap:6px;margin-bottom:14px;}
+.cal-src-btn{padding:8px 18px;font-size:13px;font-weight:500;border-radius:var(--r);border:1px solid var(--line);color:var(--mid);background:var(--bg1);transition:all .15s;}
+.cal-src-btn.active{background:var(--blue-d);color:var(--blue);border-color:var(--blue-d);}
+.widget-frame{background:var(--bg1);border:1px solid var(--line);border-radius:8px;overflow:hidden;min-height:600px;}
+#investingCalFrame{width:100%;border:none;min-height:640px;background:var(--bg1);}
+
+/* Full news */
+.news-full{display:flex;flex-direction:column;}
+.news-full .news-item{padding:14px 0;border-bottom:1px solid var(--line2);}
+.news-full .news-hl{font-size:14px;}
+.news-src-tabs{display:flex;gap:6px;margin-bottom:16px;}
+.nsrc-btn{padding:7px 16px;font-size:12.5px;font-weight:500;border-radius:var(--r);border:1px solid var(--line);color:var(--mid);background:var(--bg1);}
+.nsrc-btn.active{background:var(--blue-d);color:var(--blue);border-color:transparent;}
+
+/* Settings */
+.api-grid{display:flex;flex-direction:column;gap:12px;}
+.api-card{background:var(--bg1);border:1px solid var(--line);border-radius:8px;padding:16px 18px;}
+.api-card h3{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.api-card p{font-size:12px;color:var(--mid);margin-bottom:10px;line-height:1.5;}
+.req{font-size:9px;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;}
+.req.r{background:var(--dn-d);color:var(--dn);}
+.req.o{background:var(--bg3);color:var(--mid);}
+.api-card input{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:5px;padding:9px 12px;color:var(--hi);font-size:13px;margin-bottom:7px;}
+.api-card input:focus{outline:none;border-color:var(--blue);}
+.btn-save{background:var(--blue);color:var(--bg0);font-weight:700;font-size:13px;padding:11px 0;border-radius:var(--r);width:100%;margin-top:6px;}
+.save-ok{color:var(--up);font-size:12.5px;text-align:center;margin-top:6px;}
+.api-info{margin-top:24px;background:var(--bg1);border:1px solid var(--line);border-radius:8px;padding:16px 18px;}
+.api-info h4{font-size:13px;margin-bottom:10px;}
+.api-info ul{display:flex;flex-direction:column;gap:6px;}
+.api-info li{font-size:12.5px;color:var(--mid);line-height:1.5;}
+.api-info strong{color:var(--hi);}
+
+/* Investing.com embed wrapper */
+.investing-wrap{background:var(--bg1);border-radius:8px;overflow:hidden;}
+</style>
+</head>
+<body>
+
+<!-- TICKER -->
+<div class="ticker-wrap"><div class="ticker-track" id="tickerTrack"></div></div>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark">N·FX</span>
+      <span class="brand-name">NEXUS<span class="brand-accent">FX</span></span>
+    </div>
+    <nav class="topnav">
+      <button class="nav-btn active" data-view="terminal">Terminal</button>
+      <button class="nav-btn" data-view="calendar">Ekonomik Takvim</button>
+      <button class="nav-btn" data-view="news">Haberler</button>
+      <button class="nav-btn" data-view="settings">API Ayarları</button>
+    </nav>
+    <div class="status-row">
+      <span class="s-dot" id="sDot"></span>
+      <span class="s-lbl" id="sLbl">Bağlanıyor…</span>
+      <span class="clock" id="clock">--:--:--</span>
+    </div>
+  </div>
+</header>
+
+<!-- TERMINAL VIEW -->
+<div id="view-terminal">
+<div class="shell">
+
+  <!-- LEFT -->
+  <aside class="col">
+    <div class="rail-head">
+      Enstrümanlar
+      <div class="asset-tabs" style="margin-top:8px">
+        <button class="atab active" data-cls="crypto">Kripto</button>
+        <button class="atab" data-cls="forex">Forex</button>
+        <button class="atab" data-cls="commodity">Emtia</button>
+      </div>
+    </div>
+    <div id="watchlist"></div>
+  </aside>
+
+  <!-- CENTER -->
+  <section class="col" style="display:flex;flex-direction:column;">
+    <div class="sym-bar">
+      <div class="sym-id">
+        <span class="sym-name" id="symName">BTC/USDT</span>
+        <span class="sym-price" id="symPrice">—</span>
+        <span class="sym-chg" id="symChg">—</span>
+      </div>
+      <div class="tf-row">
+        <button class="tf-btn" data-tf="15m">15D</button>
+        <button class="tf-btn active" data-tf="1h">1S</button>
+        <button class="tf-btn" data-tf="4h">4S</button>
+        <button class="tf-btn" data-tf="1d">1G</button>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-src-tabs">
+        <button class="csrc-btn active" data-csrc="tv">TradingView</button>
+        <button class="csrc-btn" data-csrc="investing">Investing</button>
+      </div>
+      <div id="tvChart"></div>
+      <iframe id="investingChart" style="display:none;width:100%;height:100%;border:none;"></iframe>
+    </div>
+
+    <div class="ind-strip" id="indStrip"></div>
+
+    <div class="signal-engine">
+      <div class="sig-head">
+        <div class="sig-title"><span class="pulse" id="sigPulse"></span>AI SİNYAL MOTORU — RSI · MACD · BB · Haber + AI Yorumu</div>
+        <button class="btn-gen" id="btnGen">⚡ Sinyal Üret</button>
+      </div>
+      <div class="sig-body" id="sigBody">
+        <div class="sig-empty">
+          <p style="margin-bottom:6px;">Henüz sinyal üretilmedi.</p>
+          <p>"⚡ Sinyal Üret" butonuna bas — teknik göstergeler (RSI, MACD, Bollinger) + güncel haberler + ekonomik takvim birleştirilerek AI yorumu oluşturulacak. Claude API anahtarı yoksa kural tabanlı sinyal üretilir.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT -->
+  <aside class="col">
+    <div class="rail-block">
+      <div class="rb-head">
+        <span>Piyasa Haberleri</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="src-toggle">
+            <button class="stgl active" data-nsrc="demo">Demo</button>
+            <button class="stgl" data-nsrc="newsapi">NewsAPI</button>
+          </div>
+          <span class="live-tag">CANLI</span>
+        </div>
+      </div>
+      <div class="news-feed" id="newsMini"></div>
+    </div>
+    <div class="rail-block" style="border-bottom:none;">
+      <div class="rb-head">
+        <span>Günlük Takvim</span>
+        <div class="src-toggle">
+          <button class="stgl active" data-calsrc="mini">Özet</button>
+          <button class="stgl" data-calsrc="tv">TradingView</button>
+        </div>
+      </div>
+      <div id="calMini"></div>
+      <div id="calMiniTV" style="display:none;padding:10px;"></div>
+    </div>
+  </aside>
+
+</div>
+</div>
+
+<!-- CALENDAR PANEL -->
+<div id="view-calendar" style="display:none;" class="panel">
+  <div class="panel-inner">
+    <h2 class="panel-title">Ekonomik Takvim</h2>
+    <p class="panel-sub">TradingView ve Investing.com kaynaklarından gerçek zamanlı ekonomik etkinlik takvimi. Kaynak seçerek farklı veri sağlayıcıları karşılaştırabilirsiniz.</p>
+    <div class="cal-source-tabs">
+      <button class="cal-src-btn active" data-cview="tv">📊 TradingView Economic Calendar</button>
+      <button class="cal-src-btn" data-cview="investing">📰 Investing.com Takvim</button>
+    </div>
+    <div class="widget-frame" id="calWidgetTV"><!-- TV widget JS ile oluşturulur --></div>
+    <div class="widget-frame" id="calWidgetInvesting" style="display:none;">
+      <!-- Investing.com economic calendar embed -->
+      <iframe 
+        src="https://sslecal2.investing.com?columns=act_vcol,ins_vcol,enum_vcol,time_vcol,datzone_vcol,event_vcol,currency_vcol,actual_vcol,forecast_vcol,previous_vcol&category=_employment,_economicActivity,_inflation,_credit,_centralBanks,_confidenceIndex,_balance,_Bonds&importance=1,2,3&features=datepicker,timezone,filters&countries=5,72,22,25,37,12,110,6,4&calType=week&timeZone=55&lang=9"
+        width="100%" height="640" frameborder="0" allowtransparency="true" marginwidth="0" marginheight="0"
+        style="background:transparent;">
+      </iframe>
+      <div style="font-size:10px;color:var(--low);padding:8px 12px;">
+        Kaynak: <a href="https://www.investing.com" target="_blank" rel="noopener">Investing.com</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEWS PANEL -->
+<div id="view-news" style="display:none;" class="panel">
+  <div class="panel-inner">
+    <h2 class="panel-title">Haber Akışı</h2>
+    <div class="news-src-tabs">
+      <button class="nsrc-btn active" data-nview="demo">Demo Verisi</button>
+      <button class="nsrc-btn" data-nview="newsapi">NewsAPI (Anahtar Gerekli)</button>
+      <button class="nsrc-btn" data-nview="investing">Investing.com Feed</button>
+    </div>
+    <div id="newsFull"></div>
+    <div id="newsInvestingEmbed" style="display:none;">
+      <div style="background:var(--bg1);border:1px solid var(--line);border-radius:8px;overflow:hidden;">
+        <iframe 
+          src="https://widget.investing.com/live-feed/?pairs=1,5,2611,8830&theme=dark&roundedCorners=true&isTitle=false&lang=56"
+          width="100%" height="600" frameborder="0" allowtransparency="true">
+        </iframe>
+        <div style="font-size:10px;color:var(--low);padding:8px 12px;">
+          Kaynak: <a href="https://www.investing.com" target="_blank" rel="noopener">Investing.com</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS PANEL -->
+<div id="view-settings" style="display:none;" class="panel">
+  <div class="panel-inner narrow">
+    <h2 class="panel-title">API Bağlantıları</h2>
+    <p class="panel-sub">API anahtarları yalnızca bu tarayıcıda saklanır — hiçbir sunucuya gönderilmez. Claude API olmadan kural tabanlı sinyal, NewsAPI olmadan demo haber gösterilir.</p>
+    <div class="api-grid">
+      <div class="api-card">
+        <h3>Claude API <span class="req r">Önerilen</span></h3>
+        <p>AI sinyal yorumu, haber analizi ve gerekçeli tahmin için. Yoksa kural tabanlı RSI/MACD/BB sinyali üretilir.</p>
+        <input type="password" id="k_claude" placeholder="sk-ant-...">
+        <a href="https://console.anthropic.com/" target="_blank" rel="noopener" style="font-size:12px;">→ console.anthropic.com'dan ücretsiz deneme anahtarı al</a>
+      </div>
+      <div class="api-card">
+        <h3>NewsAPI.org <span class="req o">Opsiyonel</span></h3>
+        <p>Gerçek zamanlı İngilizce finans haberleri. Ücretsiz planda 100 istek/gün.</p>
+        <input type="password" id="k_news" placeholder="API anahtarınız">
+        <a href="https://newsapi.org/register" target="_blank" rel="noopener" style="font-size:12px;">→ newsapi.org'dan ücretsiz anahtar al</a>
+      </div>
+      <div class="api-card">
+        <h3>Finnhub <span class="req o">Opsiyonel</span></h3>
+        <p>Forex/emtia gerçek zamanlı fiyat doğrulama ve ek piyasa verisi.</p>
+        <input type="password" id="k_finnhub" placeholder="API anahtarınız">
+        <a href="https://finnhub.io/register" target="_blank" rel="noopener" style="font-size:12px;">→ finnhub.io'dan ücretsiz anahtar al</a>
+      </div>
+    </div>
+    <button class="btn-save" id="btnSave">Kaydet</button>
+    <div class="save-ok" id="saveOk" style="display:none;">✓ Kaydedildi</div>
+
+    <div class="api-info">
+      <h4>Veri Kaynakları</h4>
+      <ul>
+        <li><strong>Kripto canlı fiyat</strong> — Binance WebSocket, ücretsiz, anahtar gerektirmez</li>
+        <li><strong>Forex / Emtia grafik</strong> — TradingView widget, ücretsiz, anahtar gerektirmez</li>
+        <li><strong>Ekonomik takvim</strong> — TradingView + Investing.com embed, ücretsiz</li>
+        <li><strong>Haberler</strong> — NewsAPI (anahtar gerekli) veya demo veri; Investing.com feed embed</li>
+        <li><strong>AI sinyal yorumu</strong> — Claude API (anahtar gerekli); yoksa RSI+MACD+BB kural motoru</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== DATA ===== */
+const SYM = {
+  crypto:[
+    {id:"BTCUSDT",name:"BTC/USDT",binance:"btcusdt",tv:"BINANCE:BTCUSDT",cls:"KRIPTO"},
+    {id:"ETHUSDT",name:"ETH/USDT",binance:"ethusdt",tv:"BINANCE:ETHUSDT",cls:"KRIPTO"},
+    {id:"SOLUSDT",name:"SOL/USDT",binance:"solusdt",tv:"BINANCE:SOLUSDT",cls:"KRIPTO"},
+    {id:"BNBUSDT",name:"BNB/USDT",binance:"bnbusdt",tv:"BINANCE:BNBUSDT",cls:"KRIPTO"},
+    {id:"XRPUSDT",name:"XRP/USDT",binance:"xrpusdt",tv:"BINANCE:XRPUSDT",cls:"KRIPTO"},
+  ],
+  forex:[
+    {id:"EURUSD",name:"EUR/USD",tv:"FX:EURUSD",cls:"FOREX"},
+    {id:"GBPUSD",name:"GBP/USD",tv:"FX:GBPUSD",cls:"FOREX"},
+    {id:"USDJPY",name:"USD/JPY",tv:"FX:USDJPY",cls:"FOREX"},
+    {id:"USDTRY",name:"USD/TRY",tv:"FX:USDTRY",cls:"FOREX"},
+    {id:"EURTRY",name:"EUR/TRY",tv:"FX:EURTRY",cls:"FOREX"},
+    {id:"USDCHF",name:"USD/CHF",tv:"FX:USDCHF",cls:"FOREX"},
+  ],
+  commodity:[
+    {id:"XAUUSD",name:"ALTIN XAU/USD",tv:"OANDA:XAUUSD",cls:"EMTİA"},
+    {id:"XAGUSD",name:"GÜMÜŞ XAG/USD",tv:"OANDA:XAGUSD",cls:"EMTİA"},
+    {id:"USOIL", name:"HAM PETROL WTI",tv:"TVC:USOIL",cls:"EMTİA"},
+    {id:"NATGAS",name:"DOĞAL GAZ",tv:"TVC:NATURALGAS",cls:"EMTİA"},
+  ]
+};
+const ALL = [...SYM.crypto,...SYM.forex,...SYM.commodity];
+const state = { cls:"crypto", sym:SYM.crypto[0], tf:"1h", prices:{}, chartSrc:"tv" };
+
+function keys(){
+  try{return JSON.parse(localStorage.getItem("nfx_keys")||"{}");} catch(e){return {};}
+}
+function saveKeys(k){localStorage.setItem("nfx_keys",JSON.stringify(k));}
+function getKey(n){return keys()[n]||"";}
+
+/* ===== CLOCK ===== */
+setInterval(()=>{
+  document.getElementById("clock").textContent=new Date().toLocaleTimeString("tr-TR",{hour12:false});
+},1000);
+
+/* ===== BINANCE WS ===== */
+let ws=null;
+function connectBinance(){
+  const streams=SYM.crypto.map(s=>s.binance+"@ticker").join("/");
+  ws=new WebSocket("wss://stream.binance.com:9443/stream?streams="+streams);
+  ws.onopen=()=>setConn(true);
+  ws.onclose=()=>{setConn(false);setTimeout(connectBinance,4000);};
+  ws.onerror=()=>setConn(false);
+  ws.onmessage=(e)=>{
+    try{
+      const d=JSON.parse(e.data).data;
+      if(!d||!d.s)return;
+      state.prices[d.s]={price:parseFloat(d.c),chg:parseFloat(d.P)};
+      updatePriceUI(d.s,parseFloat(d.c),parseFloat(d.P));
+    }catch(err){}
+  };
+}
+function setConn(live){
+  document.getElementById("sDot").className="s-dot"+(live?" live":"");
+  document.getElementById("sLbl").textContent=live?"Canlı bağlantı":"Yeniden bağlanıyor…";
+}
+function updatePriceUI(id,price,chg){
+  const fmt=(n,d)=>n.toLocaleString("tr-TR",{minimumFractionDigits:d,maximumFractionDigits:d});
+  const dec=price>100?2:4;
+  const pe=document.getElementById("wp-"+id);
+  const ce=document.getElementById("wc-"+id);
+  if(pe)pe.textContent=fmt(price,dec);
+  if(ce){ce.textContent=(chg>=0?"+":"")+fmt(chg,2)+"%";ce.className="wl-chg "+(chg>=0?"up":"dn");}
+  if(state.sym.id===id){
+    document.getElementById("symPrice").textContent=fmt(price,dec);
+    const sc=document.getElementById("symChg");
+    sc.textContent=(chg>=0?"+":"")+fmt(chg,2)+"%";
+    sc.className="sym-chg "+(chg>=0?"up":"dn");
+  }
+}
+setInterval(()=>{
+  // Ticker yenile
+  buildTicker();
+},3000);
+
+function buildTicker(){
+  const items=[...ALL,...ALL];
+  document.getElementById("tickerTrack").innerHTML=items.map(s=>{
+    const d=state.prices[s.id];
+    const p=d?d.price.toLocaleString("tr-TR",{maximumFractionDigits:4}):"—";
+    const c=d?((d.chg>=0?"+":"")+d.chg.toFixed(2)+"%"):"";
+    return`<span class="tick-item"><span class="tick-sym">${s.name}</span><span>${p}</span><span class="${d?(d.chg>=0?"tick-up":"tick-dn"):""}">${c}</span></span>`;
+  }).join("");
+}
+
+/* ===== WATCHLIST ===== */
+function renderWL(){
+  const items=SYM[state.cls]||[];
+  document.getElementById("watchlist").innerHTML=items.map(s=>`
+    <div class="wl-item${state.sym.id===s.id?" active":""}" data-id="${s.id}" onclick="pickSym('${s.id}')">
+      <div><div class="wl-name">${s.name}</div><div class="wl-cls">${s.cls}</div></div>
+      <div style="text-align:right">
+        <div class="wl-price" id="wp-${s.id}">—</div>
+        <div class="wl-chg" id="wc-${s.id}">—</div>
+      </div>
+    </div>`).join("");
+}
+function pickSym(id){
+  const s=ALL.find(x=>x.id===id);
+  if(!s)return;
+  state.sym=s;
+  document.getElementById("symName").textContent=s.name;
+  document.getElementById("symPrice").textContent="—";
+  document.getElementById("symChg").textContent="—";
+  renderChart();
+  renderWL();
+  resetSignal(s.name);
+}
+document.querySelectorAll(".atab").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".atab").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    state.cls=b.dataset.cls;
+    state.sym=SYM[state.cls][0];
+    renderWL();
+    pickSym(state.sym.id);
+  });
+});
+
+/* ===== TradingView CHART ===== */
+let tvWidget=null;
+function loadTVScript(){
+  return new Promise(r=>{
+    if(window.TradingView)return r();
+    const s=document.createElement("script");
+    s.src="https://s3.tradingview.com/tv.js";
+    s.onload=r;s.onerror=r;
+    document.head.appendChild(s);
+  });
+}
+const TF_MAP={"15m":"15","1h":"60","4h":"240","1d":"D"};
+async function renderChart(){
+  if(state.chartSrc==="investing"){
+    renderInvestingChart();
+    return;
+  }
+  await loadTVScript();
+  const c=document.getElementById("tvChart");
+  c.style.display="";
+  document.getElementById("investingChart").style.display="none";
+  c.innerHTML="";
+  if(!window.TradingView){
+    c.innerHTML=`<div style="padding:40px;color:var(--low);font-size:13px;text-align:center">TradingView yüklenemedi.</div>`;
+    return;
+  }
+  tvWidget=new TradingView.widget({
+    autosize:true,symbol:state.sym.tv,
+    interval:TF_MAP[state.tf]||"60",
+    timezone:"Europe/Istanbul",theme:"dark",style:"1",locale:"tr",
+    toolbar_bg:"#11151c",enable_publishing:false,hide_top_toolbar:false,
+    save_image:false,container_id:"tvChart",
+    backgroundColor:"#0c0f14",
+    overrides:{"paneProperties.background":"#0c0f14","paneProperties.vertGridProperties.color":"rgba(35,42,56,0.4)","paneProperties.horzGridProperties.color":"rgba(35,42,56,0.4)"}
+  });
+}
+function renderInvestingChart(){
+  const c=document.getElementById("tvChart");
+  const ic=document.getElementById("investingChart");
+  c.style.display="none";
+  ic.style.display="";
+  // Investing.com direct chart embed
+  const pair=state.sym.id;
+  ic.src=`https://widget.investing.com/financial-widgets/stocks-overview?theme=dark&roundedCorners=false&color=%230c0f14&font=Arial&lang=56&features=currency&pair=${pair}`;
+}
+
+/* Chart source toggle */
+document.querySelectorAll(".csrc-btn").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".csrc-btn").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    state.chartSrc=b.dataset.csrc;
+    renderChart();
+  });
+});
+
+/* TF buttons */
+document.querySelectorAll(".tf-btn").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".tf-btn").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    state.tf=b.dataset.tf;
+    renderChart();
+  });
+});
+
+/* ===== INDICATORS ===== */
+async function fetchKlines(sym,tf){
+  const ivMap={"15m":"15m","1h":"1h","4h":"4h","1d":"1d"};
+  const iv=ivMap[tf]||"1h";
+  const r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${sym.toUpperCase()}&interval=${iv}&limit=200`);
+  if(!r.ok)throw new Error("Kline yüklenemedi");
+  return (await r.json()).map(k=>({o:+k[1],h:+k[2],l:+k[3],c:+k[4],v:+k[5]}));
+}
+function calcRSI(c,p=14){
+  if(c.length<p+1)return null;
+  let g=0,l=0;
+  for(let i=1;i<=p;i++){const d=c[i]-c[i-1];if(d>=0)g+=d;else l-=d;}
+  let ag=g/p,al=l/p;
+  for(let i=p+1;i<c.length;i++){const d=c[i]-c[i-1];const gn=d>0?d:0;const ln=d<0?-d:0;ag=(ag*(p-1)+gn)/p;al=(al*(p-1)+ln)/p;}
+  if(al===0)return 100;
+  return 100-(100/(1+ag/al));
+}
+function calcEMA(v,p){
+  const k=2/(p+1);let e=[v[0]];
+  for(let i=1;i<v.length;i++)e.push(v[i]*k+e[i-1]*(1-k));
+  return e;
+}
+function calcMACD(c){
+  if(c.length<35)return null;
+  const ef=calcEMA(c,12),es=calcEMA(c,26);
+  const ml=c.map((_,i)=>ef[i]-es[i]);
+  const sig=calcEMA(ml.slice(25),9);
+  return{macd:ml[ml.length-1],signal:sig[sig.length-1],hist:ml[ml.length-1]-sig[sig.length-1]};
+}
+function calcBB(c,p=20){
+  if(c.length<p)return null;
+  const sl=c.slice(-p);
+  const m=sl.reduce((a,b)=>a+b,0)/p;
+  const sd=Math.sqrt(sl.reduce((a,b)=>a+Math.pow(b-m,2),0)/p);
+  return{upper:m+2*sd,mid:m,lower:m-2*sd};
+}
+async function runIndicators(sym){
+  if(sym.cls!=="KRIPTO")return null;
+  const kl=await fetchKlines(sym.binance,state.tf);
+  const cl=kl.map(k=>k.c);
+  const rsi=calcRSI(cl);
+  const macd=calcMACD(cl);
+  const bb=calcBB(cl);
+  const last=cl[cl.length-1];
+  let score=0,reasons=[];
+  if(rsi!==null){
+    if(rsi<30){score++;reasons.push(`RSI ${rsi.toFixed(1)} — aşırı satım`);}
+    else if(rsi>70){score--;reasons.push(`RSI ${rsi.toFixed(1)} — aşırı alım`);}
+    else reasons.push(`RSI ${rsi.toFixed(1)} — nötr`);
+  }
+  if(macd){
+    if(macd.hist>0){score++;reasons.push("MACD histogram pozitif — yukarı momentum");}
+    else{score--;reasons.push("MACD histogram negatif — aşağı momentum");}
+  }
+  if(bb){
+    if(last<=bb.lower){score++;reasons.push("Alt Bollinger bandına yakın — toparlanma ihtimali");}
+    else if(last>=bb.upper){score--;reasons.push("Üst Bollinger bandına yakın — geri çekilme ihtimali");}
+    else reasons.push("Bollinger orta bandında — nötr");
+  }
+  const dir=score>=2?"BUY":score<=-2?"SELL":"NEUTRAL";
+  renderIndStrip({rsi,macd,bb,last,score,dir});
+  return{rsi,macd,bb,last,score,dir,reasons};
+}
+function renderIndStrip(d){
+  const fmt=n=>n!=null?n.toLocaleString("tr-TR",{maximumFractionDigits:4}):"—";
+  const bbPos=d.bb?((d.last-d.bb.lower)/(d.bb.upper-d.bb.lower)*100).toFixed(0)+"%":"—";
+  document.getElementById("indStrip").innerHTML=`
+    <div class="ind-card"><div class="ind-lbl">RSI (14)</div>
+      <div class="ind-val ${d.rsi?(d.rsi<30?"up":d.rsi>70?"dn":""):""}">${d.rsi?.toFixed(1)??"—"}</div>
+      <div class="ind-sub">${d.rsi?(d.rsi<30?"Aşırı Satım":d.rsi>70?"Aşırı Alım":"Nötr"):""}</div></div>
+    <div class="ind-card"><div class="ind-lbl">MACD Histogram</div>
+      <div class="ind-val ${d.macd?(d.macd.hist>0?"up":"dn"):""}">${d.macd?.hist?.toFixed(4)??"—"}</div>
+      <div class="ind-sub">${d.macd?(d.macd.hist>0?"↑ Yukarı Momentum":"↓ Aşağı Momentum"):""}</div></div>
+    <div class="ind-card"><div class="ind-lbl">Bollinger Pozisyon</div>
+      <div class="ind-val">${bbPos}</div>
+      <div class="ind-sub">${d.bb?`${d.bb.lower.toFixed(2)}—${d.bb.upper.toFixed(2)}`:""}</div></div>
+    <div class="ind-card"><div class="ind-lbl">Kural Yönü</div>
+      <div class="ind-val ${d.dir==="BUY"?"up":d.dir==="SELL"?"dn":""}">${d.dir}</div>
+      <div class="ind-sub">Skor: ${d.score>=0?"+":""}${d.score} / ±3</div></div>`;
+}
+function resetIndStrip(){
+  document.getElementById("indStrip").innerHTML=["RSI (14)","MACD","Bollinger","Yön"].map(l=>
+    `<div class="ind-card"><div class="ind-lbl">${l}</div><div class="ind-val">—</div><div class="ind-sub">—</div></div>`
+  ).join("");
+}
+
+/* ===== NEWS ===== */
+const DEMO_NEWS=[
+  {title:"Fed faiz kararı öncesinde dolar endeksinde yatay seyir",src:"Reuters",time:"12 dk",sent:"neu"},
+  {title:"Altın jeopolitik gerginlik nedeniyle $2.450 üzerinde seyrediyor",src:"Bloomberg",time:"34 dk",sent:"pos"},
+  {title:"ECB: Enflasyon hedefe yakınsıyor, politika esnekliği mümkün",src:"FT",time:"1 sa",sent:"pos"},
+  {title:"Bitcoin kurumsal alımların desteğiyle haftalık kazancını genişletti",src:"CoinDesk",time:"1 sa",sent:"pos"},
+  {title:"ABD tarım dışı istihdam verisi beklentilerin altında kaldı",src:"Reuters",time:"2 sa",sent:"neg"},
+  {title:"OPEC+ üretim kararı sonrası petrol fiyatları geriledi",src:"Bloomberg",time:"3 sa",sent:"neg"},
+  {title:"BoJ para politikasında temkinli duruşunu sürdürdü",src:"Nikkei",time:"4 sa",sent:"neu"},
+  {title:"Kripto piyasasında işlem hacmi son bir haftanın zirvesine ulaştı",src:"CoinDesk",time:"5 sa",sent:"pos"},
+];
+function sentLabel(s){return s==="pos"?"Pozitif":s==="neg"?"Negatif":"Nötr";}
+async function getNews(){
+  const k=getKey("news");
+  if(!k)return DEMO_NEWS.map(n=>({...n,demo:true}));
+  try{
+    const r=await fetch(`https://newsapi.org/v2/everything?q=forex+OR+crypto+OR+gold+OR+"federal+reserve"&language=en&sortBy=publishedAt&pageSize=12&apiKey=${k}`);
+    if(!r.ok)throw new Error();
+    const d=await r.json();
+    const items=(d.articles||[]).map(a=>({
+      title:a.title,src:a.source?.name||"—",
+      time:timeAgo(a.publishedAt),
+      sent:simpleSent(a.title),url:a.url
+    }));
+    return items.length?items:DEMO_NEWS;
+  }catch(e){return DEMO_NEWS.map(n=>({...n,demo:true}));}
+}
+function timeAgo(iso){
+  if(!iso)return"—";
+  const m=Math.floor((Date.now()-new Date(iso).getTime())/60000);
+  return m<60?`${m} dk`:m<1440?`${Math.floor(m/60)} sa`:`${Math.floor(m/1440)} gün`;
+}
+function simpleSent(t){
+  const tx=(t||"").toLowerCase();
+  const p=["surge","rally","gain","rise","beat","bullish","recovery","strong"].some(w=>tx.includes(w));
+  const n=["fall","drop","crash","bearish","miss","weak","recession"].some(w=>tx.includes(w));
+  return p&&!n?"pos":n&&!p?"neg":"neu";
+}
+function renderNews(items,el){
+  el.innerHTML=items.map(n=>`
+    <div class="news-item">
+      <div class="news-hl">${esc(n.title)}</div>
+      <div class="news-meta">
+        <span class="n-src">${esc(n.src)}</span>
+        <span class="n-time">${n.time}</span>
+        <span class="n-sent ${n.sent}">${sentLabel(n.sent)}</span>
+        ${n.demo?'<span class="n-sent neu">Demo</span>':""}
+      </div>
+    </div>`).join("");
+}
+
+/* ===== CALENDAR MINI ===== */
+const CAL_DEMO=[
+  {time:"10:00",flag:"🇩🇪",event:"Almanya ZEW Güven Endeksi",imp:"med"},
+  {time:"13:00",flag:"🇬🇧",event:"BoE Faiz Kararı",imp:"high"},
+  {time:"15:30",flag:"🇺🇸",event:"ABD Çekirdek TÜFE (aylık)",imp:"high"},
+  {time:"17:00",flag:"🇺🇸",event:"EIA Ham Petrol Stokları",imp:"med"},
+  {time:"20:30",flag:"🇺🇸",event:"Fed Tutanak Açıklaması",imp:"high"},
+  {time:"23:50",flag:"🇯🇵",event:"Japonya Ticaret Dengesi",imp:"low"},
+];
+function renderCalMini(items){
+  document.getElementById("calMini").innerHTML=items.map(e=>`
+    <div class="cal-row">
+      <span class="cal-time">${e.time}</span>
+      <span class="cal-flag">${e.flag}</span>
+      <span class="cal-event">${esc(e.event)}</span>
+      <span class="cal-imp" style="background:${e.imp==="high"?"var(--dn)":e.imp==="med"?"var(--amber)":"var(--low)"}"></span>
+    </div>`).join("");
+}
+
+/* Calendar mini source toggle */
+document.querySelectorAll("[data-calsrc]").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll("[data-calsrc]").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    if(b.dataset.calsrc==="tv"){
+      document.getElementById("calMini").style.display="";
+      document.getElementById("calMiniTV").style.display="none";
+    } else {
+      document.getElementById("calMini").style.display="none";
+      const tv=document.getElementById("calMiniTV");
+      tv.style.display="";
+      tv.innerHTML=`<div style="height:280px;overflow:hidden;">
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
+        {"colorTheme":"dark","isTransparent":true,"width":"100%","height":"280","locale":"tr","importanceFilter":"-1,0,1","countryFilter":"us,eu,gb,jp,tr,de,cn"}<\/script>
+      </div>`;
+    }
+  });
+});
+
+/* News source toggle in right rail */
+document.querySelectorAll("[data-nsrc]").forEach(b=>{
+  b.addEventListener("click",async ()=>{
+    document.querySelectorAll("[data-nsrc]").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    const items=await getNews();
+    renderNews(items,document.getElementById("newsMini"));
+  });
+});
+
+/* ===== AI SIGNAL ===== */
+async function generateSignal(){
+  const pulse=document.getElementById("sigPulse");
+  const btn=document.getElementById("btnGen");
+  const body=document.getElementById("sigBody");
+  pulse.className="pulse on";
+  btn.disabled=true;btn.textContent="Analiz ediliyor…";
+  body.innerHTML=`<div class="sig-empty"><p>Teknik göstergeler hesaplanıyor + haberler taranıyor…</p></div>`;
+  try{
+    const tech=await runIndicators(state.sym).catch(()=>null);
+    const news=await getNews();
+    const claudeKey=getKey("claude");
+    let ai=null;
+    if(claudeKey){
+      ai=await askClaude(state.sym,tech,news,claudeKey);
+    }
+    renderSignal(state.sym,tech,news,ai);
+  }catch(e){
+    body.innerHTML=`<div class="sig-empty"><p>Hata: ${esc(e.message)}</p></div>`;
+  }finally{
+    pulse.className="pulse";
+    btn.disabled=false;btn.textContent="⚡ Sinyal Üret";
+  }
+}
+async function askClaude(sym,tech,news,key){
+  const techStr=tech
+    ?`RSI: ${tech.rsi?.toFixed(1)??"N/A"}, MACD histogram: ${tech.macd?.hist?.toFixed(4)??"N/A"}, Bollinger: fiyat ${tech.last?.toFixed(2)} | üst ${tech.bb?.upper?.toFixed(2)} alt ${tech.bb?.lower?.toFixed(2)}. Kural tabanlı yön: ${tech.dir} (skor ${tech.score}).`
+    :`Bu enstrüman için (${sym.cls}) canlı teknik veri mevcut değil; haber akışı ve genel piyasa koşullarına dayanarak yorum üret.`;
+
+  const newsStr=news.slice(0,6).map(n=>`- [${n.sent}] ${n.title}`).join("\n");
+
+  const prompt=`Sen uzman bir piyasa analistisin. ${sym.name} için kısa, net bir trading değerlendirmesi yap.
+
+TEKNİK ANALİZ:
+${techStr}
+
+GÜNCEL HABERLER:
+${newsStr}
+
+Yalnızca aşağıdaki JSON formatında yanıt ver:
+{
+  "direction": "BUY" | "SELL" | "NEUTRAL",
+  "confidence": 0-100,
+  "entry": "olası giriş fiyatı veya bölgesi (Türkçe)",
+  "sl": "stop loss bölgesi (Türkçe)",
+  "tp": "hedef fiyat bölgesi (Türkçe)",
+  "narrative": "2-3 cümle Türkçe gerekçe — teknik + haber birleşimi",
+  "risk": "en kritik risk faktörü (Türkçe, 1 cümle)"
+}`;
+
+  const r=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "x-api-key":key,
+      "anthropic-version":"2023-06-01",
+      "anthropic-dangerous-direct-browser-access":"true"
+    },
+    body:JSON.stringify({
+      model:"claude-sonnet-4-6",
+      max_tokens:700,
+      messages:[{role:"user",content:prompt}]
+    })
+  });
+  if(!r.ok)throw new Error(`Claude API ${r.status} — API Ayarları'ndan anahtarı kontrol et.`);
+  const d=await r.json();
+  const txt=d.content?.find(c=>c.type==="text")?.text||"";
+  const clean=txt.replace(/```json|```/g,"").trim();
+  return JSON.parse(clean);
+}
+function renderSignal(sym,tech,news,ai){
+  const dir=ai?.direction||tech?.dir||"NEUTRAL";
+  const conf=ai?.confidence??(tech?Math.min(90,50+Math.abs(tech.score)*13):50);
+  const dirLabel=dir==="BUY"?"AL 🟢":dir==="SELL"?"SAT 🔴":"BEKLE 🟡";
+  const narrative=ai?.narrative||(tech?`Kural tabanlı analiz: ${tech.reasons?.join(". ")}.`:`Claude API anahtarı eklenmemiş — yalnızca kural tabanlı analiz.`);
+  const risk=ai?.risk||"Piyasa volatilitesi ani yön değişikliklerine yol açabilir.";
+
+  document.getElementById("sigBody").innerHTML=`
+    <div class="sig-result">
+      <div class="sig-verdict">
+        <span class="verdict ${dir}">${dirLabel}</span>
+        <div class="verdict-meta">
+          <span>Güven: <b>%${Math.round(conf)}</b></span>
+          <span>${sym.name} · ${state.tf.toUpperCase()}</span>
+          <span style="font-size:10px;color:var(--low)">${ai?"Claude AI + Kural Motoru":"Yalnızca Kural Motoru"}</span>
+        </div>
+      </div>
+
+      ${tech?`
+      <div class="sig-grid">
+        <div class="sig-cell"><div class="sc-lbl">RSI (14)</div><div class="sc-val ${tech.rsi?(tech.rsi<30?"up":tech.rsi>70?"dn":""):""}">${tech.rsi?.toFixed(1)??"—"}</div></div>
+        <div class="sig-cell"><div class="sc-lbl">MACD Hist.</div><div class="sc-val ${tech.macd?(tech.macd.hist>0?"up":"dn"):""}">${tech.macd?.hist?.toFixed(4)??"—"}</div></div>
+        <div class="sig-cell"><div class="sc-lbl">BB Pozisyon</div><div class="sc-val">${tech.bb?((tech.last-tech.bb.lower)/(tech.bb.upper-tech.bb.lower)*100).toFixed(0)+"%":"—"}</div></div>
+      </div>`:``}
+
+      ${ai?`
+      <div class="sig-grid">
+        <div class="sig-cell"><div class="sc-lbl">Giriş Bölgesi</div><div class="sc-val" style="font-size:11.5px">${esc(ai.entry||"—")}</div></div>
+        <div class="sig-cell"><div class="sc-lbl">Stop Loss</div><div class="sc-val dn" style="font-size:11.5px">${esc(ai.sl||"—")}</div></div>
+        <div class="sig-cell"><div class="sc-lbl">Hedef (TP)</div><div class="sc-val up" style="font-size:11.5px">${esc(ai.tp||"—")}</div></div>
+      </div>`:``}
+
+      <div class="sig-narrative">
+        ${esc(narrative)}
+        <span class="src-tag">⚠️ Risk: ${esc(risk)}</span>
+      </div>
+
+      <div class="sig-disc">Bu sinyal yalnızca bilgilendirme amaçlıdır, yatırım tavsiyesi değildir. Trading yüksek risk içerir — sermayenizin tamamını kaybedebilirsiniz. Her zaman kendi araştırmanızı yapın.</div>
+    </div>`;
+}
+function resetSignal(name){
+  document.getElementById("sigBody").innerHTML=`<div class="sig-empty"><p>${esc(name)} seçildi.</p><p>"⚡ Sinyal Üret" butonuna bas.</p></div>`;
+  resetIndStrip();
+}
+document.getElementById("btnGen").addEventListener("click",generateSignal);
+
+/* ===== NAVIGATION ===== */
+const VIEWS=["terminal","calendar","news","settings"];
+function showView(v){
+  document.getElementById("view-terminal").style.display=v==="terminal"?"":"none";
+  VIEWS.filter(x=>x!=="terminal").forEach(x=>{
+    document.getElementById("view-"+x).style.display=x===v?"":"none";
+  });
+  if(v==="calendar")initCalendarPanel();
+  if(v==="news")initNewsPanel();
+  if(v==="settings")initSettings();
+}
+document.querySelectorAll(".nav-btn").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".nav-btn").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    showView(b.dataset.view);
+  });
+});
+
+/* Calendar panel source tabs */
+document.querySelectorAll("[data-cview]").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll("[data-cview]").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    document.getElementById("calWidgetTV").style.display=b.dataset.cview==="tv"?"":"none";
+    document.getElementById("calWidgetInvesting").style.display=b.dataset.cview==="investing"?"":"none";
+  });
+});
+
+let tvCalLoaded=false;
+function initCalendarPanel(){
+  if(!tvCalLoaded){
+    tvCalLoaded=true;
+    const wrap=document.getElementById("calWidgetTV");
+    const s=document.createElement("script");
+    s.type="text/javascript";
+    s.src="https://s3.tradingview.com/external-embedding/embed-widget-events.js";
+    s.async=true;
+    s.innerHTML=JSON.stringify({
+      colorTheme:"dark",isTransparent:false,
+      width:"100%",height:"650",locale:"tr",
+      importanceFilter:"-1,0,1",
+      countryFilter:"us,eu,gb,jp,tr,de,fr,cn"
+    });
+    wrap.appendChild(s);
+  }
+}
+
+/* News panel source tabs */
+document.querySelectorAll("[data-nview]").forEach(b=>{
+  b.addEventListener("click",async()=>{
+    document.querySelectorAll("[data-nview]").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    const nf=document.getElementById("newsFull");
+    const ie=document.getElementById("newsInvestingEmbed");
+    if(b.dataset.nview==="investing"){
+      nf.style.display="none";ie.style.display="";
+    } else {
+      nf.style.display="";ie.style.display="none";
+      const items=await getNews();
+      const el=document.createElement("div");el.className="news-full";
+      renderNews(items,el);nf.innerHTML="";nf.appendChild(el);
+    }
+  });
+});
+async function initNewsPanel(){
+  const items=await getNews();
+  const el=document.createElement("div");el.className="news-full";
+  renderNews(items,el);
+  const nf=document.getElementById("newsFull");
+  nf.innerHTML="";nf.appendChild(el);
+}
+
+/* Settings */
+function initSettings(){
+  const k=keys();
+  if(k.claude)document.getElementById("k_claude").placeholder="••••"+k.claude.slice(-4);
+  if(k.news)document.getElementById("k_news").placeholder="••••"+k.news.slice(-4);
+  if(k.finnhub)document.getElementById("k_finnhub").placeholder="••••"+k.finnhub.slice(-4);
+}
+document.getElementById("btnSave").addEventListener("click",()=>{
+  const k=keys();
+  const nc=document.getElementById("k_claude").value;
+  const nn=document.getElementById("k_news").value;
+  const nf=document.getElementById("k_finnhub").value;
+  saveKeys({claude:nc||k.claude||"",news:nn||k.news||"",finnhub:nf||k.finnhub||""});
+  const ok=document.getElementById("saveOk");ok.style.display="block";
+  setTimeout(()=>ok.style.display="none",2500);
+});
+
+/* ===== UTIL ===== */
+function esc(s){const d=document.createElement("div");d.textContent=s||"";return d.innerHTML;}
+
+/* ===== INIT ===== */
+async function init(){
+  document.getElementById("clock").textContent=new Date().toLocaleTimeString("tr-TR",{hour12:false});
+  renderWL();
+  buildTicker();
+  renderCalMini(CAL_DEMO);
+  resetIndStrip();
+  await renderChart();
+  connectBinance();
+  const news=await getNews();
+  renderNews(news,document.getElementById("newsMini"));
+}
+init();
+</script>
+</body>
+</html>
